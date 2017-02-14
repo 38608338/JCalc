@@ -5,6 +5,11 @@ import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 import javax.swing.*;
@@ -51,6 +56,38 @@ public class JCalc {
 			textArea.setText(prop.get("text").toString()); 
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+		
+		Connection c = null;
+		try {
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:"+JCalc.class.getResource("/")+"test.db");
+			System.out.println("Opened database successfully");
+			
+			Statement stmt = c.createStatement();
+			String sql="SELECT * from user";
+			ResultSet rs = stmt.executeQuery(sql);
+			StringBuffer sb=new StringBuffer();
+			while (rs.next()) {
+				sb.append(rs.getString("name"));
+				sb.append("\n");
+			}
+			rs.close();
+			stmt.close();
+			
+			textArea.setText(prop.get("text").toString()+"\n"+sb.toString()); 
+		} catch (Exception e) {
+			System.err.println(e.getClass().getName() + ": " + e.getMessage());
+			System.exit(0);
+		} finally {
+			try {
+				if (c != null){
+					c.close();
+					System.out.println("Closeed database successfully");
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
     }  
 }
